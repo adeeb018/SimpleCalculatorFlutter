@@ -81,9 +81,25 @@ class _MyHomePageState extends State<MyHomePage> {
   // this function is used to display the number on UI.
   int _setNumberOnScreen(String number) {
 
-    number = check(number); //checking if any operation is to be performed on number
+    if(textView != ''){
+      if(double.tryParse(textView) == null){
+        textView = '';
+      }
+    }
 
+
+    //number = check(number); //checking if any operation is to be performed on number
     //change the text in UI with new inputs
+    setState(() {
+      textView = textView + number;
+    });
+    return 0;
+  }
+
+  int _equalTo(){
+
+    String number = check(textView);
+
     setState(() {
       textView = textView + number;
     });
@@ -498,6 +514,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ElevatedButton(
                   onPressed: () {
                   changeBackgroundColor();
+                  _equalTo();
                   },
                   style: ElevatedButton.styleFrom(
                       primary: Colors.black54,
@@ -507,7 +524,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           borderRadius: BorderRadius.zero
                       )
                   ),
-                  child: const Text(''),
+                  child: const Text('='),
                 ),
               ],
             ),
