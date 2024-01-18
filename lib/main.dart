@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 
+import 'database_helper.dart';
 import 'home_page.dart';
 
-void main() {
+
+
+final dbHelper = DatabaseHelper();
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // initialize the database
+  await dbHelper.init();
   runApp(const MyApp());
 }
 
@@ -14,10 +22,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Simple Calculator',
-
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: Colors.blue,
-        scaffoldBackgroundColor: Colors.lightGreenAccent,
+        // primaryColor: Colors.blue,
+        // scaffoldBackgroundColor: Colors.lightGreenAccent,
         // This is the theme of your application.
         //
         // TRY THIS: Try running your application with "flutter run". You'll see

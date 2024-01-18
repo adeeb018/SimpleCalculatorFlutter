@@ -1,7 +1,13 @@
 import 'dart:ffi';
 import 'dart:math';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter/material.dart';
+import 'package:simplecalcflutter/screen.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:simplecalcflutter/database_helper.dart';
+
+import 'main.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -22,8 +28,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
-  Color scaffoldBackgroundColor = Colors.white; // used for generating random colors
+  Color scaffoldBackgroundColor =
+      Colors.white; // used for generating random colors
 
   String textView = ''; // the displaying text
 
@@ -32,12 +38,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   double firstNum = 0; // add next number with this number
 
-  String currentOpn = ''; // when entering next number operation to be performed is saved here
+  String currentOpn =
+      ''; // when entering next number operation to be performed is saved here
 
   //the function is to check if there is any operation to be performed on new number
   //if there is anything to perform then current number and first number will act as operands
   //and the operator will be in string currentOpn.
-  String check(String number){
+
+  String check(String number) {
     if (currentOpn.isNotEmpty) {
       textView = '';
       switch (currentOpn) {
@@ -66,44 +74,43 @@ class _MyHomePageState extends State<MyHomePage> {
               .toString(); // taking modulus current and previous and convert to string
           firstNum = double.parse(number);
           break;
-        default :
+        default:
           const snackBar = SnackBar(
-            content: Text('Error'), duration: Duration(seconds: 2),);
+            content: Text('Error'),
+            duration: Duration(seconds: 2),
+          );
           ScaffoldMessenger.of(context).showSnackBar(snackBar);
           break;
       }
-      currentOpn = ''; // set to empty for stopping next number to use same operation
+      currentOpn =
+          ''; // set to empty for stopping next number to use same operation
     }
     return number;
   }
 
-
   // this function is used to display the number on UI.
-  int _setNumberOnScreen(String number) {
-
-    if(textView != ''){
-      if(double.tryParse(textView) == null){
+  void _setNumberOnScreen(String number) {
+    if (textView != '') {
+      if (double.tryParse(textView) == null) {
         textView = '';
       }
     }
-
 
     //number = check(number); //checking if any operation is to be performed on number
     //change the text in UI with new inputs
     setState(() {
       textView = textView + number;
     });
-    return 0;
+    return;
   }
 
-  int _equalTo(){
-
+  double _equalTo() {
     String number = check(textView);
 
     setState(() {
       textView = textView + number;
     });
-    return 0;
+    return double.parse(textView);
   }
 
   // this function will clear the screen and set all the values to initial point.
@@ -121,12 +128,12 @@ class _MyHomePageState extends State<MyHomePage> {
   // this function is used to clear the last entered data
   void _backLastTyped() {
     setState(() {
-      if(textView != '') {
-        textView = textView.substring(0, textView.length - 1); // last character is ignored
+      if (textView != '') {
+        textView = textView.substring(
+            0, textView.length - 1); // last character is ignored
       }
     });
   }
-
 
   // this function is checking some conditions
   // 1.if an operation come before entering number. example if input come as -2+3,here -2 should evaluated
@@ -148,11 +155,8 @@ class _MyHomePageState extends State<MyHomePage> {
     // the previous number has some sign on it.
     if (firstSign == false) {
       firstNum = double.parse(textView);
-    }
-    else {
-      if (double
-          .parse(textView)
-          .isNaN) {
+    } else {
+      if (double.parse(textView).isNaN) {
         _clearScreen();
         return;
       }
@@ -167,16 +171,62 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void changeBackgroundColor() {
-    scaffoldBackgroundColor = getRandomColor();
-    setState(() {
-
-    });
+    scaffoldBackgroundColor = _getRandomColor();
+    setState(() {});
   }
 
-  Color getRandomColor() {
+  Color _getRandomColor() {
     Random random = Random();
     return Color.fromRGBO(
         random.nextInt(255), random.nextInt(255), random.nextInt(255), 1.0);
+  }
+
+  void _setSharedPrefsThemeColor() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('background1', 'white');
+  }
+
+  void changeThemeColor() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? counter = prefs.getString('background1');
+
+    if (counter == null) {
+      _setSharedPrefsThemeColor();
+    }
+
+    if (counter == 'white') {
+      prefs.setString('background1', 'black');
+    } else {
+      prefs.setString('background1', 'white');
+    }
+
+    setState(() {
+      scaffoldBackgroundColor =
+          counter == 'white' ? Colors.green : Colors.white;
+    });
+
+    // counter = null;
+  }
+
+  void setThemeColorOnLoading() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? counter = prefs.getString('background1');
+
+    if (counter == null) {
+      prefs.setString('background1', 'white');
+      counter = prefs.getString('background1');
+    }
+
+    scaffoldBackgroundColor = counter == 'white' ? Colors.white : Colors.green;
+
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    setThemeColorOnLoading();
+    super.initState();
   }
 
   @override
@@ -189,348 +239,216 @@ class _MyHomePageState extends State<MyHomePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       backgroundColor: scaffoldBackgroundColor,
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Colors.green,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              textView,
-              style: const TextStyle(
-                  fontSize: 30, fontWeight: FontWeight.bold),),
-            const Padding(padding: EdgeInsets.only(bottom: 20)),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    _clearScreen();
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('AC'),
-                ),
-                const Padding(padding: EdgeInsets.only(right: 10)),
-                ElevatedButton(
-                  onPressed: () {
-                    _setOperations('%');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('%'),
-                ),
-                const Padding(padding: EdgeInsets.only(right: 10)),
-                ElevatedButton(
-                  onPressed: () {
-                    _backLastTyped();
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('BA'),
-                ),
-                const Padding(padding: EdgeInsets.only(right: 10)),
-                ElevatedButton(
-                  onPressed: () {
-                    _setOperations('*');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('*'),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    _setNumberOnScreen('7');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('7'),
-                ),
-                const Padding(padding: EdgeInsets.only(right: 10)),
-                ElevatedButton(
-                  onPressed: () {
-                    _setNumberOnScreen('8');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('8'),
-                ),
-                const Padding(padding: EdgeInsets.only(right: 10)),
-                ElevatedButton(
-                  onPressed: () {
-                    _setNumberOnScreen('9');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('9'),
-                ),
-                const Padding(padding: EdgeInsets.only(right: 10)),
-                ElevatedButton(
-                  onPressed: () {
-                    _setOperations('/');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('/'),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    _setNumberOnScreen('4');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('4'),
-                ),
-                const Padding(padding: EdgeInsets.only(right: 10)),
-                ElevatedButton(
-                  onPressed: () {
-                    _setNumberOnScreen('5');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('5'),
-                ),
-                const Padding(padding: EdgeInsets.only(right: 10)),
-                ElevatedButton(
-                  onPressed: () {
-                    _setNumberOnScreen('6');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('6'),
-                ),
-                const Padding(padding: EdgeInsets.only(right: 10)),
-                ElevatedButton(
-                  onPressed: () {
-                    _setOperations('+');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('+'),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    _setNumberOnScreen('1');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('1'),
-                ),
-                const Padding(padding: EdgeInsets.only(right: 10)),
-                ElevatedButton(
-                  onPressed: () {
-                    _setNumberOnScreen('2');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('2'),
-                ),
-                const Padding(padding: EdgeInsets.only(right: 10)),
-                ElevatedButton(
-                  onPressed: () {
-                    _setNumberOnScreen('3');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('3'),
-                ),
-                const Padding(padding: EdgeInsets.only(right: 10)),
-                ElevatedButton(
-                  onPressed: () {
-                    _setOperations('-');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('-'),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    _setNumberOnScreen('00');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('00'),
-                ),
-                const Padding(padding: EdgeInsets.only(right: 10)),
-                ElevatedButton(
-                  onPressed: () {
-                    _setNumberOnScreen('0');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('0'),
-                ),
-                const Padding(padding: EdgeInsets.only(right: 10)),
-                ElevatedButton(
-                  onPressed: () {
-                    _setNumberOnScreen('.');
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('.'),
-                ),
-                const Padding(padding: EdgeInsets.only(right: 10)),
-                ElevatedButton(
-                  onPressed: () {
-                  changeBackgroundColor();
-                  _equalTo();
-                  },
-                  style: ElevatedButton.styleFrom(
-                      primary: Colors.black54,
-                      onPrimary: Colors.white,
-                      shape:
-                      const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero
-                      )
-                  ),
-                  child: const Text('='),
-                ),
-              ],
-            ),
-          ],
-        ),
+      appBar: appBar(),
+      body: scaffoldBody(context),
+    );
+  }
+
+  Center scaffoldBody(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text(
+            textView,
+            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+          ),
+          const Padding(padding: EdgeInsets.only(bottom: 20)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              clearField(),
+              const Padding(padding: EdgeInsets.only(right: 10)),
+              elevatedButton('%'),
+              const Padding(padding: EdgeInsets.only(right: 10)),
+              backField(),
+              const Padding(padding: EdgeInsets.only(right: 10)),
+              elevatedButton('*'),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              numberButton('7'),
+              const Padding(padding: EdgeInsets.only(right: 10)),
+              numberButton('8'),
+              const Padding(padding: EdgeInsets.only(right: 10)),
+              numberButton('9'),
+              const Padding(padding: EdgeInsets.only(right: 10)),
+              elevatedButton('/')
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              numberButton('4'),
+              const Padding(padding: EdgeInsets.only(right: 10)),
+              numberButton('5'),
+              const Padding(padding: EdgeInsets.only(right: 10)),
+              numberButton('6'),
+              const Padding(padding: EdgeInsets.only(right: 10)),
+              elevatedButton('+'),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              numberButton('1'),
+              const Padding(padding: EdgeInsets.only(right: 10)),
+              numberButton('2'),
+              const Padding(padding: EdgeInsets.only(right: 10)),
+              numberButton('3'),
+              const Padding(padding: EdgeInsets.only(right: 10)),
+              elevatedButton('-')
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              numberButton('00'),
+              const Padding(padding: EdgeInsets.only(right: 10)),
+              numberButton('0'),
+              const Padding(padding: EdgeInsets.only(right: 10)),
+              numberButton('.'),
+              const Padding(padding: EdgeInsets.only(right: 10)),
+              ElevatedButton(
+                onPressed: () {
+                  // changeBackgroundColor();
+                  double value = _equalTo();
+                  _insert(value);
+                  // someFunction();
+                  Navigator.of(context).push(_createRoute());
+                },
+                style: ElevatedButton.styleFrom(
+                    primary: Colors.black54,
+                    onPrimary: Colors.white,
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.zero)),
+                child: const Text('='),
+              ),
+            ],
+          ),
+        ],
       ),
     );
+  }
+
+  ElevatedButton backField() {
+    return ElevatedButton(
+              onPressed: () {
+                _backLastTyped();
+              },
+              style: ElevatedButton.styleFrom(
+                  primary: Colors.black54,
+                  onPrimary: Colors.white,
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero)),
+              child: const Text('BA'),
+            );
+  }
+
+  ElevatedButton clearField() {
+    return ElevatedButton(
+              onPressed: () {
+                _clearScreen();
+              },
+              style: ElevatedButton.styleFrom(
+                  primary: Colors.black54,
+                  onPrimary: Colors.white,
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero)),
+              child: const Text('AC'),
+            );
+  }
+
+  ElevatedButton numberButton(String num) {
+    return ElevatedButton(
+              onPressed: () {
+                _setNumberOnScreen(num);
+              },
+              style: ElevatedButton.styleFrom(
+                  primary: Colors.black54,
+                  onPrimary: Colors.white,
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero)),
+              child: Text(num),
+            );
+  }
+
+  ElevatedButton elevatedButton(String op) {
+    return ElevatedButton(
+              onPressed: () {
+                _setOperations(op);
+              },
+              style: ElevatedButton.styleFrom(
+                  primary: Colors.black54,
+                  onPrimary: Colors.white,
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.zero)),
+              child: Text(op),
+            );
+  }
+
+  AppBar appBar() {
+    return AppBar(
+      // TRY THIS: Try changing the color here to a specific color (to
+      // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
+      // change color while the other colors stay the same.
+      backgroundColor: Colors.green,
+      // Here we take the value from the MyHomePage object that was created by
+      // the App.build method, and use it to set our appbar title.
+      title: Text(widget.title),
+
+      //button
+      actions: [
+        IconButton(
+            onPressed: changeThemeColor,
+            icon: const Icon(Icons.invert_colors))
+      ],
+    );
+  }
+
+  Route _createRoute() {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) => Screen(),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(1.0, 0.0);
+        const end = Offset.zero;
+        const curve = Curves.easeInOut;
+
+        var tween =
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+        var offsetAnimation = animation.drive(tween);
+
+        return SlideTransition(
+          position: offsetAnimation,
+          child: child,
+        );
+      },
+    );
+  }
+
+  void _insert(double value) async {
+    // row to insert
+    Map<String, dynamic> row = {DatabaseHelper.columnAge: value};
+    final id = await dbHelper.insert(row);
+    debugPrint('inserted row id: $id');
+  }
+
+  void query() async {
+    final allRows = await dbHelper.queryAllRows();
+    debugPrint('query all rows:');
+    for (final row in allRows) {
+      print(row['sums']);
+      // debugPrint(row.toString());
+    }
+  }
+
+  void _delete() async {
+    // Assuming that the number of rows is the id for the last row.
+    final id = await dbHelper.queryRowCount();
+    final rowsDeleted = await dbHelper.delete(id);
+    debugPrint('deleted $rowsDeleted row(s): row $id');
   }
 }
