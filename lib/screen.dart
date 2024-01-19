@@ -21,13 +21,10 @@ class _NewState extends State<Screen>{
     }
   }
   void _takeDataFromDB() async {
-
-
     setState(() {
 
     });
     // print(counter);
-
   }
   @override
   Widget build(BuildContext context) {
