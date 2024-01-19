@@ -464,10 +464,5 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void _delete() async {
-    // Assuming that the number of rows is the id for the last row.
-    final id = await dbHelper.queryRowCount();
-    final rowsDeleted = await dbHelper.delete(id);
-    debugPrint('deleted $rowsDeleted row(s): row $id');
-  }
+
 }

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:simplecalcflutter/home_page.dart';
+import 'package:simplecalcflutter/native_channel.dart';
 
 import 'main.dart';
 
@@ -21,10 +22,20 @@ class _NewState extends State<Screen>{
       // debugPrint(row.toString());
     }
   }
-  void _takeDataFromDB() async {
+
+  void _delete() async {
+    // Assuming that the number of rows is the id for the last row.
+    final id = await dbHelper.queryRowCount();
+    final rowsDeleted = await dbHelper.delete(id);
+    debugPrint('deleted $rowsDeleted row(s): row $id');
+
     setState(() {
 
     });
+  }
+
+  void _clearDataFromDB(){
+    _delete();
     // print(counter);
   }
   @override
@@ -37,14 +48,23 @@ class _NewState extends State<Screen>{
           child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const MyTable(),
-                      ElevatedButton(onPressed:
-                        _takeDataFromDB,
-                        child: const Text('Take All Data')),
+                      MyTable(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          buildElevatedButton(function: NativeChannel.myMethod,data: 'Connect with kotlin'),
+                          buildElevatedButton(function: _clearDataFromDB, data: 'Clear one data'),
+                        ],
+                      ),
                     ],
                   ),
         ),
     );
+  }
+
+  ElevatedButton buildElevatedButton({required void Function()? function, String? data}) {
+    return ElevatedButton(onPressed:function,
+                      child: Text(data!));
   }
 }
 
