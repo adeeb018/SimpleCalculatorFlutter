@@ -6,8 +6,9 @@ import 'package:simplecalcflutter/home_page.dart';
 import 'main.dart';
 
 class Screen extends StatefulWidget{
-  Screen({super.key});
+  const Screen({super.key});
 
+  @override
   State<Screen> createState() => _NewState();
 }
 
@@ -36,7 +37,7 @@ class _NewState extends State<Screen>{
           child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      MyTable(),
+                      const MyTable(),
                       ElevatedButton(onPressed:
                         _takeDataFromDB,
                         child: const Text('Take All Data')),
@@ -48,6 +49,8 @@ class _NewState extends State<Screen>{
 }
 
 class MyTable extends StatefulWidget {
+  const MyTable({super.key});
+
 
   @override
   State<MyTable> createState() => _MyTableState();
@@ -74,7 +77,6 @@ class _MyTableState extends State<MyTable> {
 
   @override
   void initState() {
-    // TODO: implement initState
     query();
     super.initState();
   }

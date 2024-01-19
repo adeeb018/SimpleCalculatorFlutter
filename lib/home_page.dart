@@ -104,13 +104,14 @@ class _MyHomePageState extends State<MyHomePage> {
     return;
   }
 
-  double _equalTo() {
+  String _equalTo() {
     String number = check(textView);
 
     setState(() {
       textView = textView + number;
     });
-    return double.parse(textView);
+
+    return textView;
   }
 
   // this function will clear the screen and set all the values to initial point.
@@ -181,11 +182,13 @@ class _MyHomePageState extends State<MyHomePage> {
         random.nextInt(255), random.nextInt(255), random.nextInt(255), 1.0);
   }
 
+  //create new shared preference for background
   void _setSharedPrefsThemeColor() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('background1', 'white');
   }
 
+  // change the Bg color
   void changeThemeColor() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     String? counter = prefs.getString('background1');
@@ -208,6 +211,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // counter = null;
   }
 
+  //This function check for previous background color and set background color on loading
   void setThemeColorOnLoading() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     String? counter = prefs.getString('background1');
@@ -222,6 +226,7 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {});
   }
 
+  //used for initiating checking for previous background property
   @override
   void initState() {
     // TODO: implement initState
@@ -314,7 +319,10 @@ class _MyHomePageState extends State<MyHomePage> {
               ElevatedButton(
                 onPressed: () {
                   // changeBackgroundColor();
-                  double value = _equalTo();
+                  double? value = double.tryParse(_equalTo());
+                  if(value == null) {
+                    return;
+                  }
                   _insert(value);
                   // someFunction();
                   Navigator.of(context).push(_createRoute());
@@ -333,6 +341,8 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+
+  //elevated button for deleting the last typed value in textView
   ElevatedButton backField() {
     return ElevatedButton(
               onPressed: () {
@@ -347,6 +357,7 @@ class _MyHomePageState extends State<MyHomePage> {
             );
   }
 
+  // button for deleting all the texts in textField
   ElevatedButton clearField() {
     return ElevatedButton(
               onPressed: () {
@@ -361,6 +372,7 @@ class _MyHomePageState extends State<MyHomePage> {
             );
   }
 
+  // button function for all the numbers
   ElevatedButton numberButton(String num) {
     return ElevatedButton(
               onPressed: () {
@@ -375,6 +387,7 @@ class _MyHomePageState extends State<MyHomePage> {
             );
   }
 
+  //button function for all the operators
   ElevatedButton elevatedButton(String op) {
     return ElevatedButton(
               onPressed: () {
@@ -408,16 +421,19 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+
+  //created route for moving to next page
   Route _createRoute() {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => Screen(),
+      //transitionbuilder is optional if we need some animation(but we should write that function and return child)
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         const begin = Offset(1.0, 0.0);
         const end = Offset.zero;
         const curve = Curves.easeInOut;
 
         var tween =
-            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
 
         var offsetAnimation = animation.drive(tween);
 
@@ -429,6 +445,8 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+
+  // insert function used to insert value into sqflite database
   void _insert(double value) async {
     // row to insert
     Map<String, dynamic> row = {DatabaseHelper.columnAge: value};
@@ -436,6 +454,7 @@ class _MyHomePageState extends State<MyHomePage> {
     debugPrint('inserted row id: $id');
   }
 
+  //u= query function is used to retrieve values from database as MAP
   void query() async {
     final allRows = await dbHelper.queryAllRows();
     debugPrint('query all rows:');
